@@ -110,16 +110,111 @@ function filterUserProducts() {
     });
 }
 
-// Client Side Form submission mock logic processor for User Profile updates
-function saveProfileSettings(event) {
+// Client Side Form submission handler for User Profile updates
+async function saveProfileSettings(event) {
     event.preventDefault();
-    alert("Profile configurations have been synchronized successfully.");
+
+    const name = document.getElementById('profileName').value.trim();
+    const email = document.getElementById('profileEmail').value.trim();
+    const currentPassword = document.getElementById('profileCurrentPassword').value.trim();
+    const newPassword = document.getElementById('profileNewPassword').value.trim();
+
+    if (!name || !email) {
+        alert('Please complete name and email fields.');
+        return;
+    }
+
+    try {
+        const response = await fetch('API/profile-update.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&current_password=${encodeURIComponent(currentPassword)}&new_password=${encodeURIComponent(newPassword)}`
+        });
+        const result = await response.text();
+        alert(result);
+    } catch (error) {
+        console.error('Profile update error:', error);
+        alert('Unable to update profile at this time.');
+    }
 }
 
-// Client Side Form submission mock logic processor for Admin System Settings configuration
-function saveGlobalSettings(event) {
+// Client Side Form submission handler for Admin System Settings configuration
+async function saveGlobalSettings(event) {
     event.preventDefault();
-    alert("Global system core variable metrics have been updated.");
+
+    const title = document.getElementById('settingsTitle').value.trim();
+    const supportDesk = document.getElementById('settingsSupportDesk').value.trim();
+    const sessionExpiry = document.getElementById('settingsSessionExpiry').value;
+    const enableAudit = document.getElementById('settingsEnableAudit').checked;
+    const forceMFA = document.getElementById('settingsForceMFA').checked;
+
+    try {
+        const response = await fetch('API/settings-update.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `title=${encodeURIComponent(title)}&support_desk=${encodeURIComponent(supportDesk)}&session_expiry=${encodeURIComponent(sessionExpiry)}&enable_audit=${enableAudit ? '1' : '0'}&force_mfa=${forceMFA ? '1' : '0'}`
+        });
+        const result = await response.text();
+        alert(result);
+    } catch (error) {
+        console.error('Settings update error:', error);
+        alert('Unable to save settings at this time.');
+    }
+}
+
+async function validateForgotPassword(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('forgotEmail').value.trim();
+    if (!email) {
+        alert('Please enter your email.');
+        return;
+    }
+
+    try {
+        const response = await fetch('API/forgot-password.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `email=${encodeURIComponent(email)}`
+        });
+        const result = await response.text();
+        alert(result);
+        if (result.toLowerCase().includes('reset link')) {
+            showView('loginPage');
+        }
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        alert('Unable to send reset link. Please try again.');
+    }
+}
+
+async function createProduct(event) {
+    event.preventDefault();
+
+    const name = document.getElementById('productName').value.trim();
+    const description = document.getElementById('productDescription').value.trim();
+    const url = document.getElementById('productUrl').value.trim();
+
+    if (!name) {
+        alert('Please enter a product name.');
+        return;
+    }
+
+    try {
+        const response = await fetch('API/product-create.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `product_name=${encodeURIComponent(name)}&product_description=${encodeURIComponent(description)}&product_url=${encodeURIComponent(url)}`
+        });
+        const result = await response.text();
+        alert(result);
+        if (result.toLowerCase().includes('product created successfully')) {
+            switchDashboardTab('product-management');
+        }
+    } catch (error) {
+        console.error('Create product error:', error);
+        alert('Unable to create product at this time.');
+    }
 }
 
 // Audit Logs realtime multi-tier logic query routing sub routine

@@ -13,15 +13,15 @@
         <div class="auth-card">
             <h2>Login</h2>
             <p class="subtitle">Welcome back! Please login to your account</p>
-            <form onsubmit="handleRoute(event, 'userDashboard')">
+            <form onsubmit="validateLogin(event)">
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" placeholder="Enter your email" required>
+                    <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required>
                 </div>
                 <div class="form-group">
                     <label>Password</label>
                     <div class="password-wrapper">
-                        <input type="password" id="loginPass" placeholder="Enter your password" required>
+                        <input type="password" id="loginPass" name="password" placeholder="Enter your password" required>
                         <i class="fa-solid fa-eye toggle-password" onclick="togglePassword('loginPass')"></i>
                     </div>
                 </div>
@@ -39,26 +39,97 @@
         </div>
     </div>
 
+
+        <script>
+async function validateLogin(event) {
+    event.preventDefault(); // prevent default form submission
+
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPass").value.trim();
+
+    if (!email || !password) {
+        alert("Please enter both email and password.");
+        return;
+    }
+
+    try {
+        const response = await fetch("API/login.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
+        });
+
+        const result = await response.text();
+
+        if (result.includes("Login successful")) {
+            handleRoute(event, 'userDashboard');
+        } else {
+            alert(result);
+        }
+    } catch (error) {
+        console.error("Login error:", error);
+        alert("Something went wrong. Please try again.");
+    }
+}
+
+async function validateRegister(event) {
+    event.preventDefault();
+
+    const name = document.getElementById("regName").value.trim();
+    const email = document.getElementById("regEmail").value.trim();
+    const password = document.getElementById("regPassword").value.trim();
+    const confirmPassword = document.getElementById("regConfirmPassword").value.trim();
+
+    if (!name || !email || !password || !confirmPassword) {
+        alert("Please fill in all fields.");
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        alert("Passwords do not match.");
+        return;
+    }
+
+    try {
+        const response = await fetch("API/register.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&confirm_password=${encodeURIComponent(confirmPassword)}`
+        });
+
+        const result = await response.text();
+        alert(result);
+
+        if (result.includes("Registration successful")) {
+            showView('loginPage');
+        }
+    } catch (error) {
+        console.error("Registration error:", error);
+        alert("Something went wrong during registration. Please try again.");
+    }
+}
+</script>
+
     <div id="registrationPage" class="auth-container view-section hidden">
         <div class="auth-card">
             <div class="brand"><i class="fa-solid fa-rotate"></i> Company</div>
             <h2>Create Account</h2>
-            <form onsubmit="handleRoute(event, 'loginPage')">
+            <form onsubmit="validateRegister(event)">
                 <div class="form-group">
                     <label>Full Name</label>
-                    <input type="text" placeholder="Enter your full name" required>
+                    <input type="text" id="regName" name="name" placeholder="Enter your full name" required>
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" placeholder="Enter your email" required>
+                    <input type="email" id="regEmail" name="email" placeholder="Enter your email" required>
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" placeholder="Enter password" required>
+                    <input type="password" id="regPassword" name="password" placeholder="Enter password" required>
                 </div>
                 <div class="form-group">
                     <label>Confirm Password</label>
-                    <input type="password" placeholder="Confirm your password" required>
+                    <input type="password" id="regConfirmPassword" name="confirm_password" placeholder="Confirm your password" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Register</button>
             </form>
@@ -68,16 +139,17 @@
         </div>
     </div>
 
+
     <div id="forgotPassword" class="auth-container view-section hidden">
         <div class="auth-card text-center">
             <div class="lock-icon-wrapper">
                 <i class="fa-solid fa-lock-open custom-lock"></i>
             </div>
             <h2>Forgot Password</h2>
-            <form onsubmit="handleRoute(event, 'loginPage')">
+            <form onsubmit="validateForgotPassword(event)">
                 <div class="form-group text-left">
                     <label>Email</label>
-                    <input type="email" placeholder="Enter your email" required>
+                    <input type="email" id="forgotEmail" name="email" placeholder="Enter your email" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Send Reset Link</button>
             </form>
@@ -227,27 +299,21 @@
                         <div class="form-container-card" style="max-width: 100%;">
                             <h3>Profile Parameters Configuration</h3>
                             <form onsubmit="saveProfileSettings(event)">
-                                <div class="form-row-grid">
-                                    <div class="form-group">
-                                        <label>First Name</label>
-                                        <input type="text" value="Anvar" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Last Name</label>
-                                        <input type="text" value="Sh." required>
-                                    </div>
+                                        <div class="form-group">
+                                    <label>Full Name</label>
+                                    <input type="text" id="profileName" value="Anvar Sh." required>
                                 </div>
                                 <div class="form-group">
                                     <label>Email Contact Coordinate</label>
-                                    <input type="email" value="anvar@company.com" required>
+                                    <input type="email" id="profileEmail" value="anvar@company.com" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Current Gateway Password</label>
-                                    <input type="password" placeholder="••••••••">
+                                    <input type="password" id="profileCurrentPassword" placeholder="••••••••">
                                 </div>
                                 <div class="form-group">
                                     <label>New Account Security Key (Leave blank to keep old)</label>
-                                    <input type="password" placeholder="Enter new secret string combo">
+                                    <input type="password" id="profileNewPassword" placeholder="Enter new secret string combo">
                                 </div>
                                 <button type="submit" class="btn btn-primary" style="width: auto; padding: 10px 24px;">Save Changes</button>
                             </form>
@@ -476,18 +542,18 @@
                             <div class="form-row-grid">
                                 <div class="form-group">
                                     <label>Platform Context Title Name</label>
-                                    <input type="text" value="Enterprise Engine Hub">
+                                    <input type="text" id="settingsTitle" value="Enterprise Engine Hub">
                                 </div>
                                 <div class="form-group">
                                     <label>Support Desk Routing Target</label>
-                                    <input type="email" value="ops@company.com">
+                                    <input type="email" id="settingsSupportDesk" value="ops@company.com">
                                 </div>
                             </div>
 
                             <h5 style="margin:24px 0 12px; font-size:14px; border-bottom:1px solid var(--border-color); padding-bottom:6px;">Security Rules & Automation Control</h5>
                             <div class="form-group">
                                 <label>Session Expiration Interval Threshold</label>
-                                <select style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:6px;">
+                                <select id="settingsSessionExpiry" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:6px;">
                                     <option value="60">1 Hour (Recommended)</option>
                                     <option value="120">2 Hours</option>
                                     <option value="1440">24 Hours</option>
@@ -495,12 +561,12 @@
                             </div>
                             <div class="form-group">
                                 <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                                    <input type="checkbox" checked style="width:auto;"> Enable Automated Auditing System Activity Verification Hooks
+                                    <input type="checkbox" id="settingsEnableAudit" checked style="width:auto;"> Enable Automated Auditing System Activity Verification Hooks
                                 </label>
                             </div>
                             <div class="form-group">
                                 <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                                    <input type="checkbox" style="width:auto;"> Force Multi-Factor Auth (MFA) enforcement over administrative layers
+                                    <input type="checkbox" id="settingsForceMFA" style="width:auto;"> Force Multi-Factor Auth (MFA) enforcement over administrative layers
                                 </label>
                             </div>
 
@@ -512,10 +578,10 @@
                 <div id="create-product" class="tab-content hidden">
                     <div class="form-container-card">
                         <h3>Create New Product</h3>
-                        <form onsubmit="event.preventDefault(); switchDashboardTab('product-management');">
+                        <form onsubmit="createProduct(event)">
                             <div class="form-group">
                                 <label>Product Name</label>
-                                <input type="text" placeholder="Enter product name" required>
+                                <input type="text" id="productName" name="product_name" placeholder="Enter product name" required>
                             </div>
                             <div class="form-group">
                                 <label>Product Image</label>
@@ -527,11 +593,11 @@
                             </div>
                             <div class="form-group">
                                 <label>Description</label>
-                                <textarea rows="4" placeholder="Enter product description"></textarea>
+                                <textarea id="productDescription" name="product_description" rows="4" placeholder="Enter product description"></textarea>
                             </div>
                             <div class="form-group">
                                 <label>Tool URL</label>
-                                <input type="url" placeholder="Feature URL">
+                                <input type="url" id="productUrl" name="product_url" placeholder="Feature URL">
                             </div>
                             <div class="form-buttons">
                                 <button type="submit" class="btn btn-primary">Create Product</button>

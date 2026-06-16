@@ -35,9 +35,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (password_verify($login_password, $row['password'])) {
                 // Login success
                 $_SESSION['user_id'] = $row['id'];
-                $_SESSION['username'] = $row['username'];
+                $_SESSION['username'] = $row['name'];
 
-                echo "Login successful! Welcome, " . $row['username'];
+                echo "Login successful! Welcome, " . $row['name'];
                 // Redirect to dashboard
                 // header("Location: dashboard.php");
                 // exit();
@@ -45,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo "Invalid password.";
             }
         } else {
-            echo "No account found with that username.";
+            echo "No account found with that email.";
         }
 
         $stmt->close();

@@ -1,164 +1,19 @@
+<?php
+require_once 'includes/auth.php';
+requireLogin();
+$currentUserRole = $_SESSION['user_role'] ?? 'user';
+$currentUserName = $_SESSION['user_name'] ?? 'User';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaaS Platform Frontend</title>
+    <title>Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-
-    <div id="loginPage" class="auth-container view-section">
-        <div class="auth-card">
-            <h2>Login</h2>
-            <p class="subtitle">Welcome back! Please login to your account</p>
-            <form onsubmit="validateLogin(event)">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="loginPass" name="password" placeholder="Enter your password" required>
-                        <i class="fa-solid fa-eye toggle-password" onclick="togglePassword('loginPass')"></i>
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <label><input type="checkbox"> Remember me</label>
-                    <a href="#" onclick="showView('forgotPassword')">Forgot Password?</a>
-                </div>
-                <button type="submit" class="btn btn-primary">Login</button>
-            </form>
-            <div class="auth-footer">
-                <span>New User?</span>
-                <button class="btn btn-secondary" onclick="showView('registrationPage')">Register</button>
-            </div>
-            <button class="btn btn-link admin-shortcut" onclick="showView('adminDashboard')">Go to Admin View Demo</button>
-        </div>
-    </div>
-
-
-        <script>
-async function validateLogin(event) {
-    event.preventDefault(); // prevent default form submission
-
-    const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPass").value.trim();
-
-    if (!email || !password) {
-        alert("Please enter both email and password.");
-        return;
-    }
-
-    try {
-        const response = await fetch("API/login.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
-        });
-
-        const result = await response.text();
-
-        if (result.includes("Login successful")) {
-            handleRoute(event, 'userDashboard');
-        } else {
-            alert(result);
-        }
-    } catch (error) {
-        console.error("Login error:", error);
-        alert("Something went wrong. Please try again.");
-    }
-}
-
-async function validateRegister(event) {
-    event.preventDefault();
-
-    const name = document.getElementById("regName").value.trim();
-    const email = document.getElementById("regEmail").value.trim();
-    const password = document.getElementById("regPassword").value.trim();
-    const confirmPassword = document.getElementById("regConfirmPassword").value.trim();
-
-    if (!name || !email || !password || !confirmPassword) {
-        alert("Please fill in all fields.");
-        return;
-    }
-
-    if (password !== confirmPassword) {
-        alert("Passwords do not match.");
-        return;
-    }
-
-    try {
-        const response = await fetch("API/register.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&confirm_password=${encodeURIComponent(confirmPassword)}`
-        });
-
-        const result = await response.text();
-        alert(result);
-
-        if (result.includes("Registration successful")) {
-            showView('loginPage');
-        }
-    } catch (error) {
-        console.error("Registration error:", error);
-        alert("Something went wrong during registration. Please try again.");
-    }
-}
-</script>
-
-    <div id="registrationPage" class="auth-container view-section hidden">
-        <div class="auth-card">
-            <div class="brand"><i class="fa-solid fa-rotate"></i> Company</div>
-            <h2>Create Account</h2>
-            <form onsubmit="validateRegister(event)">
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" id="regName" name="name" placeholder="Enter your full name" required>
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="regEmail" name="email" placeholder="Enter your email" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="regPassword" name="password" placeholder="Enter password" required>
-                </div>
-                <div class="form-group">
-                    <label>Confirm Password</label>
-                    <input type="password" id="regConfirmPassword" name="confirm_password" placeholder="Confirm your password" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Register</button>
-            </form>
-            <div class="auth-footer">
-                <a href="#" onclick="showView('loginPage')">Back to Login</a>
-            </div>
-        </div>
-    </div>
-
-
-    <div id="forgotPassword" class="auth-container view-section hidden">
-        <div class="auth-card text-center">
-            <div class="lock-icon-wrapper">
-                <i class="fa-solid fa-lock-open custom-lock"></i>
-            </div>
-            <h2>Forgot Password</h2>
-            <form onsubmit="validateForgotPassword(event)">
-                <div class="form-group text-left">
-                    <label>Email</label>
-                    <input type="email" id="forgotEmail" name="email" placeholder="Enter your email" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Send Reset Link</button>
-            </form>
-            <div class="auth-footer">
-                <a href="#" onclick="showView('loginPage')">Back to Login</a>
-            </div>
-        </div>
-    </div>
-
     <div id="appLayout" class="app-layout view-section hidden">
         <aside class="sidebar">
             <div class="sidebar-brand">
@@ -176,7 +31,7 @@ async function validateRegister(event) {
                     <a href="#" onclick="switchDashboardTab('activity-logs')"><i class="fa-solid fa-list-check"></i> Activity Logs</a>
                     <a href="#" onclick="switchDashboardTab('settings')"><i class="fa-solid fa-gear"></i> Settings</a>
                 </div>
-                <a href="#" class="logout-link" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+                <button onclick="window.location.href='logout.php'"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout</button>
             </nav>
         </aside>
 
@@ -657,6 +512,13 @@ async function validateRegister(event) {
         </div>
     </div>
 
-    <script src="script.js"></script>
 </body>
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('appLayout').classList.remove('hidden');
+            const role = document.body.getAttribute('data-role') || 'user';
+            setDashboardRole(role === 'admin' ? 'admin' : 'user');
+        });
+    </script>
 </html>

@@ -1,4 +1,5 @@
-// Navigation Management (Single Page App Emulation Engine)
+
+// Navigation Management (Single Page App Emulation Engine
 function showView(viewId) {
     document.querySelectorAll('.view-section').forEach(section => {
         section.classList.add('hidden');
@@ -79,16 +80,6 @@ function handleRoute(event, targetView) {
     showView(targetView);
 }
 
-// Terminate user active session session wrapper logout callback
-function logout() {
-    showView('loginPage');
-}
-
-// Password visual text visibility presentation switch toggler
-function togglePassword(inputId) {
-    const input = document.getElementById(inputId);
-    input.type = (input.type === "password") ? "text" : "password";
-}
 
 // Launch platform tools module routing mechanism emulation sequence
 function launchTool(toolName) {
@@ -125,7 +116,7 @@ async function saveProfileSettings(event) {
     }
 
     try {
-        const response = await fetch('API/profile-update.php', {
+        const response = await fetch("api.php?action=profileUpdate", {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&current_password=${encodeURIComponent(currentPassword)}&new_password=${encodeURIComponent(newPassword)}`
@@ -149,7 +140,7 @@ async function saveGlobalSettings(event) {
     const forceMFA = document.getElementById('settingsForceMFA').checked;
 
     try {
-        const response = await fetch('API/settings-update.php', {
+        const response = await fetch("api.php?action=settingsUpdate.php", {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `title=${encodeURIComponent(title)}&support_desk=${encodeURIComponent(supportDesk)}&session_expiry=${encodeURIComponent(sessionExpiry)}&enable_audit=${enableAudit ? '1' : '0'}&force_mfa=${forceMFA ? '1' : '0'}`
@@ -162,25 +153,37 @@ async function saveGlobalSettings(event) {
     }
 }
 
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        input.type = (input.type === 'password') ? 'text' : 'password';
+    }
+
 async function validateForgotPassword(event) {
     event.preventDefault();
 
     const email = document.getElementById('forgotEmail').value.trim();
+    const newPassword = document.getElementById('newPassword').value.trim();
     if (!email) {
         alert('Please enter your email.');
         return;
     }
+    if(!newPassword) {
+        alert('Please enter your new password. ');
+        return;
+    }
 
     try {
-        const response = await fetch('API/forgot-password.php', {
+        const response = await fetch('api.php?action=forgetPassword', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `email=${encodeURIComponent(email)}`
+            body: `email=${encodeURIComponent(email)}&newPassword=${encodeURIComponent(newPassword)}`
         });
-        const result = await response.text();
-        alert(result);
-        if (result.toLowerCase().includes('reset link')) {
-            showView('loginPage');
+
+        const result = await response.json();
+        alert(result.message);
+
+        if (result.success) {
+            window.location.href = 'login.php';
         }
     } catch (error) {
         console.error('Forgot password error:', error);
@@ -201,7 +204,7 @@ async function createProduct(event) {
     }
 
     try {
-        const response = await fetch('API/product-create.php', {
+        const response = await fetch("api.php?action=productCreate", {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `product_name=${encodeURIComponent(name)}&product_description=${encodeURIComponent(description)}&product_url=${encodeURIComponent(url)}`
@@ -245,4 +248,69 @@ function refreshLogs() {
         refreshBtn.disabled = false;
         alert("Activity log sequence indices successfully re-indexed.");
     }, 900);
+}
+
+    async function validateLogin(event) {
+        event.preventDefault();
+        const email    = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPass').value.trim();
+        
+        if (!email || !password) {
+            alert("Please enter both email and password.");
+            return;
+        }
+
+        try{
+            const resp = await fetch('api.php?action=login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
+            });            
+            const result = await resp.json();
+            if (result.success) {
+                window.location.href = 'index.php';
+            } else {
+                alert(result.message);
+            }
+        } catch (err) {
+                console.error('Login error: ', err);
+                alert('Something went wrong. Please try again.');
+        }
+    }
+
+async function validateRegister(event) {
+    event.preventDefault();
+
+    const name = document.getElementById("regName").value.trim();
+    const email = document.getElementById("regEmail").value.trim();
+    const password = document.getElementById("regPassword").value.trim();
+    const confirmPassword = document.getElementById("regConfirmPassword").value.trim();
+
+    if (!name || !email || !password || !confirmPassword) {
+        alert("Please fill in all fields.");
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        alert("Passwords do not match.");
+        return;
+    }
+
+    try {
+        const response = await fetch("api.php?action=register", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&confirm_password=${encodeURIComponent(confirmPassword)}`
+        });
+
+        const result = await response.json();
+        alert(result.message);
+
+        if (result.success) {
+            window.location.href = 'login.php';
+        }
+    } catch (error) {
+        console.error("Registration error:", error);
+        alert("Something went wrong during registration. Please try again.");
+    }
 }

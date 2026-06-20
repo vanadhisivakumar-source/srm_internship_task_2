@@ -83,12 +83,13 @@ function loginUser() {
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['user_name'] = $user['name'];
     $_SESSION['user_email'] = $user['email'];
-    $_SESSION['user_role'] = $user['role'];
+    // Normalize role to uppercase and store under unified key
+    $_SESSION['role'] = strtoupper($user['role']);
 
     echo json_encode([
         "success" => true,
         "message" => "Login successful.",
-        "role" => $user['role']
+        "role" => $_SESSION['role']
     ]);
 }
 
@@ -145,7 +146,7 @@ function createUser() {
     }
 
     $conn = getConnection();
-    $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'user')");
+    $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'USER')");
     $stmt->bind_param("sss", $username, $email, $password);
 
     if ($stmt->execute()) {
@@ -200,7 +201,7 @@ function registerUser() {
     
     $countResult = $conn->query("SELECT COUNT(*) AS total FROM users");
     $row = $countResult->fetch_assoc();
-    $role = ($row['total'] == 0) ? 'admin' : 'user';
+    $role = ($row['total'] == 0) ? 'ADMIN' : 'USER';
     $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
     $hashPassword = password_hash($password, PASSWORD_DEFAULT);
     $stmt->bind_param("ssss", $name, $email, $hashPassword, $role);
@@ -276,7 +277,9 @@ function productCreate() {
     // Expect x-www-form-urlencoded POST: product_name, product_description, product_url
     $name = trim($_POST['product_name'] ?? '');
     $description = trim($_POST['product_description'] ?? '');
-    $url = trim($_POST['product_url'] ?? '');
+    // Accept either product_url or tool_url (admin form uses tool_url)
+    $url = trim($_POST['product_url'] ?? ($_POST['tool_url'] ?? ''));
+    $status = trim($_POST['status'] ?? 'Active');
 
     if (empty($name)) {
         echo json_encode(["success" => false, "message" => "Product name is required."]);
@@ -288,22 +291,23 @@ function productCreate() {
 
     $conn = getConnection();
 
-    // Ensure products table exists
+    // Ensure products table exists with expected columns (tool_url and status)
     $conn->query("CREATE TABLE IF NOT EXISTS products (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         description TEXT,
-        url VARCHAR(1024),
+        tool_url VARCHAR(1024),
+        status ENUM('Active','Inactive') DEFAULT 'Active',
         created_by INT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 
-    $stmt = $conn->prepare("INSERT INTO products (name, description, url, created_by) VALUES (?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO products (name, description, tool_url, status, created_by) VALUES (?, ?, ?, ?, ?)");
     if (!$stmt) {
         echo json_encode(["success" => false, "message" => "Prepare failed: " . $conn->error]);
         return;
     }
-    $stmt->bind_param("sssi", $name, $description, $url, $createdBy);
+    $stmt->bind_param("ssssi", $name, $description, $url, $status, $createdBy);
 
     if ($stmt->execute()) {
         echo json_encode(["success" => true, "message" => "Product created successfully", "id" => $stmt->insert_id]);

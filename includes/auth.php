@@ -1,19 +1,23 @@
 <?php
+// Start session once, globally
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-function requireLogin($isApi = false) {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
+// Require login before accessing protected pages
+function require_login() {
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: login.php");
+        exit();
     }
+}
 
-    if(empty($_SESSION['user_id'])) {
-        if ($isApi) {
-            http_response_code(401);
-            header('Content-Type: application: application/json');
-            echo json_encode(["success" => false, "message" => "Not authenticated. Please login."]);
-        } else {
-            header('Location: login.php');
-        }
-        exit;
+// Require a specific role (e.g., ADMIN)
+function require_role($role) {
+    require_login(); // make sure user is logged in first
+    if (!isset($_SESSION['role']) || $_SESSION['role'] !== $role) {
+        header("Location: unauthorized.php");
+        exit();
     }
 }
 ?>

@@ -1,8 +1,18 @@
 <?php
 require_once 'includes/auth.php';
 requireLogin();
-$currentUserRole = $_SESSION['user_role'] ?? 'user';
+$currentUserRole = $_SESSION['role'] ?? 'USER';
 $currentUserName = $_SESSION['user_name'] ?? 'User';
+require_once 'includes/db.php';
+
+// Fetch active products for rendering in the dashboard
+$products = [];
+$res = $conn->query("SELECT id, name, description, tool_url, status FROM products WHERE status='Active'");
+if ($res) {
+    while ($r = $res->fetch_assoc()) {
+        $products[] = $r;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -54,38 +64,20 @@ $currentUserName = $_SESSION['user_name'] ?? 'User';
                 <div id="user-home" class="tab-content">
                     <h3 class="section-title">Project Tools</h3>
                     <div class="tools-grid">
-                        <div class="tool-card">
-                            <div class="tool-header">
-                                <i class="fa-brands fa-whatsapp whatsapp-icon"></i>
-                                <h4>WhatsApp Automation</h4>
-                            </div>
-                            <p>WhatsApp automation and response automation features.</p>
-                            <button class="btn btn-tool" onclick="launchTool('WhatsApp Automation')">Open Tool</button>
-                        </div>
-                        <div class="tool-card">
-                            <div class="tool-header">
-                                <i class="fa-regular fa-envelope mail-icon"></i>
-                                <h4>Mail Automation</h4>
-                            </div>
-                            <p>Partner tools and services automation and mail notifications.</p>
-                            <button class="btn btn-tool" onclick="launchTool('Mail Automation')">Open Tool</button>
-                        </div>
-                        <div class="tool-card">
-                            <div class="tool-header">
-                                <i class="fa-solid fa-handshake partnership-icon"></i>
-                                <h4>Partnership Tool</h4>
-                            </div>
-                            <p>Partnership tool structures market and partnership cost costings.</p>
-                            <button class="btn btn-tool" onclick="launchTool('Partnership Tool')">Open Tool</button>
-                        </div>
-                        <div class="tool-card">
-                            <div class="tool-header">
-                                <i class="fa-solid fa-file-arrow-up conversion-icon"></i>
-                                <h4>File Conversion Tool</h4>
-                            </div>
-                            <p>Conversion tool to convert files automatically and easily.</p>
-                            <button class="btn btn-tool" onclick="launchTool('File Conversion Tool')">Open Tool</button>
-                        </div>
+                        <?php if (!empty($products)): ?>
+                            <?php foreach ($products as $p): ?>
+                                <div class="tool-card">
+                                    <div class="tool-header">
+                                        <i class="fa-solid fa-box"></i>
+                                        <h4><?php echo htmlspecialchars($p['name']); ?></h4>
+                                    </div>
+                                    <p><?php echo htmlspecialchars($p['description'] ?? ''); ?></p>
+                                    <button class="btn btn-tool" onclick="window.open('<?php echo htmlspecialchars($p['tool_url']); ?>','_blank')">Open Tool</button>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <p>No active products available.</p>
+                        <?php endif; ?>
                     </div>
                 </div>
 
